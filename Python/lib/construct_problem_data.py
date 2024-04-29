@@ -65,6 +65,21 @@ def construct_problem_data(measurements):
     problem_data_sqrt_Omega_AredT = problem_data_sqrt_Omega.dot(problem_data_Ared.T)
     problem_data_sqrt_Omega_T = problem_data_sqrt_Omega.dot(problem_data_T)
 
+    print(f'd: ', problem_data_d)
+    print(f'n: ', problem_data_n)
+    print(f'm: ', problem_data_m)
+    print(f'ConLap: ', problem_data_ConLap.shape)
+    print(f'A: ', problem_data_A.shape)
+    print(f'Ared: ', problem_data_Ared.shape)
+    print(f'T: ', problem_data_T.shape)
+    print(f'Omega: ', problem_data_Omega.shape)
+    print(f'V: ', problem_data_V.shape)
+    print(f'LWtau: ', problem_data_LWtau.shape)
+    print(f'L: ', problem_data_L.shape)
+    print(f'sqrt_Omega: ', problem_data_sqrt_Omega.shape)
+    print(f'sqrt_Omega_AredT: ', problem_data_sqrt_Omega_AredT.shape)
+    print(f'sqrt_Omega_T: ', problem_data_sqrt_Omega_T.shape)
+
     problem_data = {
         'd': problem_data_d,
         'n': problem_data_n,

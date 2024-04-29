@@ -198,6 +198,7 @@ def SE_Sync(measurements, Manopt_opts=None, SE_Sync_opts=None, Y0=None):
 
             # def precon(u):
             #     return LT @ (L @ u)
+            print(f'L: {L.shape}')
             precon = lambda u: spsolve(LT, spsolve(L, u))
             
         elif Manopt_opts['preconditioner'] == 'Jacobi':
@@ -269,7 +270,7 @@ def SE_Sync(measurements, Manopt_opts=None, SE_Sync_opts=None, Y0=None):
     # Check if a solver was explicitly supplied
     if 'solver' not in Manopt_opts:
         # Use the trust-region solver by default
-        Manopt_opts['solver'] = pymanopt.optimizers.TrustRegions()
+        Manopt_opts['solver'] = pymanopt.optimizers.TrustRegions(verbosity=0)
     # solver_name = Manopt_opts['solver'].__name__
     # if solver_name not in ['trustregions', 'conjugategradient', 'steepestdescent']:
     #     raise ValueError('Unrecognized Manopt solver: {}'.format(solver_name))
@@ -278,17 +279,26 @@ def SE_Sync(measurements, Manopt_opts=None, SE_Sync_opts=None, Y0=None):
     # Set cost function handles
     @pymanopt.function.numpy(manopt_data['M'])
     def cost(Y):
-        YQ = Qproduct(Y, problem_data, SE_Sync_opts['Cholesky']).T
-        trQYtY = np.trace(YQ @ Y)
+        Yt = Y.T
+        YQ = Qproduct(Yt, problem_data, SE_Sync_opts['Cholesky']).T
+        trQYtY = np.trace(YQ @ Yt)
         return trQYtY, YQ
     
     @pymanopt.function.numpy(manopt_data['M'])
     def euclidean_gradient(Y):
-        egrad = 2 * Qproduct(Y, problem_data, SE_Sync_opts['Cholesky']).T
+        Yt = Y.T
+        egrad = 2 * Qproduct(Yt, problem_data, SE_Sync_opts['Cholesky']).T
+        return egrad
+    
+    @pymanopt.function.numpy(manopt_data['M'])
+    def euclidean_gradient(Y):
+        Yt = Y.T
+        egrad = 2 * Qproduct(Yt, problem_data, SE_Sync_opts['Cholesky']).T
         return egrad
     
     @pymanopt.function.numpy(manopt_data['M'])
     def euclidean_hessian(Ydot):
+        print(f'Ydot: {Ydot.shape}')
         Hvec = 2 * Qproduct(Ydot, problem_data, SE_Sync_opts['Cholesky']).T
         return Hvec
 
@@ -302,7 +312,10 @@ def SE_Sync(measurements, Manopt_opts=None, SE_Sync_opts=None, Y0=None):
     #     manopt_data['precon'] = lambda x, u: manopt_data['M'].proj(x, precon(u))
 
     def preconditioner(x, u):
-        manopt_data['M'].projection(x, precon(u))
+        print(f'x: {x.shape}')
+        print(f'u: {u.shape}')
+        print(f'precon: {precon(u.T).shape}')
+        manopt_data['M'].projection(x.T, precon(u.T))
 
     # problem = pymanopt.Problem()
 
@@ -332,7 +345,13 @@ def SE_Sync(measurements, Manopt_opts=None, SE_Sync_opts=None, Y0=None):
                                    euclidean_gradient=euclidean_gradient, euclidean_hessian=euclidean_hessian,
                                    preconditioner=preconditioner)
         
-        result = Manopt_opts['solver'].run(problem)
+        print(f'Y0, {Y0.shape}')
+        print('eta:', manopt_data['M'].zero_vector(Y0).shape)
+        eta = manopt_data['M'].zero_vector(Y0)
+        print('fgradx: ', problem.riemannian_gradient(Y0).shape)
+        fgradx = problem.riemannian_gradient(Y0)
+        print('z: ', problem.preconditioner(Y0,fgradx))
+        result = Manopt_opts['solver'].run(problem, initial_point=Y0)
         Yopt = result.point
         SDPLRval = result.cost
         

@@ -1,4 +1,5 @@
 import numpy as np
+from scipy.sparse.linalg import lsqr, spsolve
 
 def orthogonal_projection(X, problem_data, Cholesky=True):
     """
@@ -26,8 +27,13 @@ def orthogonal_projection(X, problem_data, Cholesky=True):
 
     else:
         # Use QR decomposition
-
-        vstar = np.linalg.solve(problem_data["sqrt_Omega_AredT"], X)
-        PiX = X - np.matmul(problem_data["sqrt_Omega_AredT"], vstar)
+        # print(f'omega: ', problem_data["sqrt_Omega_AredT"].shape)
+        # print(f'X: ', X.shape)
+        vstar = np.linalg.lstsq(problem_data["sqrt_Omega_AredT"].toarray(), X, rcond=None)[0]
+        # vstar = lsqr(problem_data["sqrt_Omega_AredT"], X)
+        # vstar = spsolve(problem_data["sqrt_Omega_AredT"], X)
+        # PiX = X - np.matmul(problem_data["sqrt_Omega_AredT"], vstar)
+        # print(f'vstar: ', vstar.shape)
+        PiX = X - (problem_data["sqrt_Omega_AredT"].toarray()).dot(vstar)
 
     return PiX
