@@ -72,9 +72,11 @@ use_chordal_initialization = True
 # Run SE-Sync
 print('Computing chordal initialization...')
 R = chordal_initialization(measurements)
+print(f"main R: ", R.shape)
 Y0 = np.vstack((R, np.zeros((SE_Sync_opts['r0'] - d, num_poses * d))))
+# Y0 = Y0.reshape(-1, num_poses, d)
 # print(f'Y0: {Y0}')
-# print(f'Y0: {Y0.shape}')
+# print(f'main: Y0: {Y0.shape}')
 SDPval, Yopt, xhat, Fxhat, SE_Sync_info, problem_data = SE_Sync(measurements, Manopt_opts, SE_Sync_opts, Y0)
 
 # Plot resulting solution
